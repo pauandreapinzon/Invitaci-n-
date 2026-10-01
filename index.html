@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fernandito cumple 64</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Nunito:wght@400;600;800&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: una tarjeta de papel sobre un mantel de cuadros, como la mesa de la abuela. Un solo look, sin tema oscuro. */
+:root {
+  --mantel: #2f6f68;
+  --mantel-claro: #3b8179;
+  --papel: #fff8ea;
+  --tinta: #3a2a22;
+  --tomate: #d6452f;
+  --mostaza: #e9a825;
+  --suave: #7a6355;
+  --linea: #ead9bd;
+  --display: "Caprasimo", Georgia, "Times New Roman", serif;
+  --texto: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mano: "Caveat", "Comic Sans MS", cursive;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding-inline: 16px;
+  padding-block: 28px 40px;
+  background-color: var(--mantel);
+  background-image:
+    linear-gradient(90deg, rgba(255,255,255,.16) 50%, transparent 50%),
+    linear-gradient(rgba(255,255,255,.16) 50%, transparent 50%);
+  background-size: 48px 48px;
+  color: var(--tinta);
+  font-family: var(--texto);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.card {
+  max-width: 560px;
+  margin-inline: auto;
+  background: var(--papel);
+  border-radius: 6px;
+  padding: 28px 22px 32px;
+  box-shadow: 0 2px 0 #fff inset, 0 18px 40px rgba(20,40,38,.35);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: relative;
+  outline: 2px dashed var(--linea);
+  outline-offset: -10px;
+}
+.top { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.eyebrow { font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: .78rem; color: var(--tomate); margin: 0; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4rem); line-height: 1; margin: 4px 0 0; text-wrap: balance; }
+.sub { margin: 0; color: var(--suave); }
+.edad {
+  display: flex; align-items: baseline; gap: 10px; margin-top: 10px;
+  font-family: var(--display);
+}
+.edad .num {
+  background: var(--tomate); color: var(--papel);
+  font-size: 3.4rem; line-height: 1;
+  padding: 8px 18px 12px; border-radius: 999px;
+  transform: rotate(-4deg);
+  box-shadow: 0 4px 0 #a5311f;
+}
+.edad .txt { font-size: 1.5rem; }
+
+/* Pastel */
+.pastel { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pastel svg { width: min(100%, 340px); height: auto; overflow: visible; }
+.vela { cursor: pointer; }
+.vela:focus-visible { outline: none; }
+.vela:focus-visible .cuerpo-vela { stroke: var(--tinta); stroke-width: 2; }
+.llama { transform-box: fill-box; transform-origin: 50% 100%; animation: parpadeo 1.1s ease-in-out infinite alternate; transition: opacity .25s, transform .25s; }
+.vela.apagada .llama { opacity: 0; transform: scale(.2); animation: none; }
+.humo { opacity: 0; transition: opacity .2s; }
+.vela.apagada .humo { opacity: .6; animation: sube 1.4s ease-out forwards; }
+@keyframes parpadeo { from { transform: scale(1) rotate(-3deg); } to { transform: scale(1.1,.94) rotate(3deg); } }
+@keyframes sube { from { transform: translateY(0); opacity: .6; } to { transform: translateY(-16px); opacity: 0; } }
+.pista { margin: 0; font-size: .9rem; color: var(--suave); text-align: center; min-height: 3em; text-wrap: balance; }
+.pista strong { color: var(--tinta); }
+button, input { font: inherit; }
+.btn {
+  appearance: none; border: 0; cursor: pointer;
+  background: var(--mostaza); color: var(--tinta); font-weight: 800;
+  padding: 10px 18px; border-radius: 999px; box-shadow: 0 3px 0 #b97f0f;
+  transition: transform .1s;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #b97f0f; }
+.btn.chico { padding: 6px 14px; font-size: .88rem; }
+.btn.verde { background: #25a35a; color: #fff; box-shadow: 0 3px 0 #17703c; text-decoration: none; display: inline-block; text-align: center; }
+.btn.verde:active { box-shadow: 0 1px 0 #17703c; }
+:focus-visible { outline: 3px solid var(--tomate); outline-offset: 2px; }
+
+/* Datos */
+.datos { display: grid; gap: 14px; margin: 0; }
+.dato { display: grid; grid-template-columns: 5.2rem minmax(0,1fr); gap: 4px 14px; align-items: baseline; padding-bottom: 14px; border-bottom: 1px dashed var(--linea); }
+.dato:last-child { border-bottom: 0; padding-bottom: 0; }
+.dato dt { font-weight: 800; letter-spacing: .1em; text-transform: uppercase; font-size: .74rem; color: var(--tomate); }
+.dato dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.dato .grande { font-family: var(--display); font-size: 1.35rem; line-height: 1.2; }
+.acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.enlace { color: var(--tomate); font-weight: 800; align-self: center; }
+
+/* Cuenta regresiva */
+.cuenta { text-align: center; display: flex; flex-direction: column; gap: 10px; }
+.cuenta h2, .rsvp h2 { font-family: var(--display); font-weight: 400; font-size: 1.5rem; margin: 0; }
+.relojes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.reloj { background: #fff; border: 2px solid var(--linea); border-radius: 12px; padding: 8px 6px; min-width: 4.4rem; }
+.reloj b { display: block; font-family: var(--display); font-weight: 400; font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.reloj span { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--suave); font-weight: 800; }
+
+/* Confirmación */
+.rsvp { background: #fff; border: 2px solid var(--linea); border-radius: 12px; padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+.campo { display: flex; flex-direction: column; gap: 4px; }
+.campo label { font-weight: 800; font-size: .88rem; }
+.campo input[type=text] { padding: 10px 12px; border: 2px solid var(--linea); border-radius: 8px; background: var(--papel); color: var(--tinta); min-width: 0; width: 100%; }
+.paso { display: flex; align-items: center; gap: 12px; }
+.paso button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--linea); background: var(--papel); color: var(--tinta); font-size: 1.3rem; font-weight: 800; cursor: pointer; }
+.paso output { min-width: 2ch; text-align: center; font-family: var(--display); font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.estado { margin: 0; font-size: .88rem; color: var(--suave); min-height: 1.4em; }
+.nota { font-family: var(--mano); font-size: 1.6rem; line-height: 1.2; text-align: center; color: var(--tomate); margin: 0; transform: rotate(-1.5deg); text-wrap: balance; }
+
+/* Confeti */
+.confeti { position: fixed; top: -12px; width: 10px; height: 14px; z-index: 10; pointer-events: none; animation: cae linear forwards; }
+@keyframes cae { to { transform: translateY(110vh) rotate(720deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .llama { animation: none; }
+  .confeti { display: none; }
+  .vela.apagada .humo { animation: none; opacity: 0; }
+}
+@media (max-width: 420px) {
+  .dato { grid-template-columns: 1fr; }
+}
+</style>
+
+</head>
+<body>
+<main class="card">
+  <header class="top">
+    <p class="eyebrow">Estás invitado a la casa de la abuela</p>
+    <h1 id="nombre">Fernandito</h1>
+    <p class="sub">cumple años y quiere a toda la familia en la mesa</p>
+    <div class="edad" aria-label="Cumple 64 años"><span class="num" id="edadNum">64</span><span class="txt">añitos</span></div>
+  </header>
+
+  <section class="pastel" aria-labelledby="tituloPastel">
+    <h2 id="tituloPastel" class="eyebrow" style="color:var(--suave)">El pastel</h2>
+    <svg id="pastel" viewBox="0 0 300 230" role="group" aria-label="Pastel con 10 velas: 6 grandes y 4 pequeñas"></svg>
+    <p class="pista" id="pista" aria-live="polite"></p>
+    <button class="btn chico" id="encender" type="button" hidden>Prender las velas otra vez</button>
+  </section>
+
+  <dl class="datos">
+    <div class="dato"><dt>Cuándo</dt><dd class="grande" id="fechaTxt"></dd></div>
+    <div class="dato"><dt>Hora</dt><dd class="grande" id="horaTxt"></dd></div>
+    <div class="dato">
+      <dt>Dónde</dt>
+      <dd>
+        <span class="grande" id="lugarTxt"></span><br>
+        <span id="dirTxt"></span>
+        <div class="acciones">
+          <button class="btn chico" id="copiarDir" type="button">Copiar dirección</button>
+          <a class="enlace" id="mapa" href="#" target="_blank" rel="noopener">Ver en el mapa</a>
+        </div>
+      </dd>
+    </div>
+  </dl>
+
+  <section class="cuenta" aria-labelledby="tCuenta">
+    <h2 id="tCuenta">Faltan</h2>
+    <div class="relojes" id="relojes" role="timer" aria-live="off"></div>
+  </section>
+
+  <section class="rsvp" aria-labelledby="tRsvp">
+    <h2 id="tRsvp">¿Vienes?</h2>
+    <div class="campo">
+      <label for="quien">Tu nombre</label>
+      <input type="text" id="quien" placeholder="Ej. Tía Marta" autocomplete="name">
+    </div>
+    <div class="campo">
+      <span id="lblCant" style="font-weight:800;font-size:.88rem">¿Cuántos vienen contigo, contándote a ti?</span>
+      <div class="paso" role="group" aria-labelledby="lblCant">
+        <button type="button" id="menos" aria-label="Uno menos">−</button>
+        <output id="cant" for="menos mas">1</output>
+        <button type="button" id="mas" aria-label="Uno más">+</button>
+      </div>
+    </div>
+    <a class="btn verde" id="wa" href="#" target="_blank" rel="noopener">Confirmar por WhatsApp</a>
+    <p class="estado" id="estado"></p>
+  </section>
+
+  <p class="nota">Vengan con hambre. El mejor regalo es el abrazo.</p>
+</main>
+
+<script>
+/* ===== Edita aquí los datos de la fiesta ===== */
+var CONFIG = {
+  nombre: "Fernandito",
+  edad: 64,
+  fecha: "2026-10-04T13:00:00-05:00",   // fecha y hora en Colombia
+  lugar: "Casa de la abuela",
+  direccion: "Calle 00 # 00-00, barrio por confirmar, Bogotá",
+  whatsapp: ""                           // solo números con indicativo, ej. 573001234567. Vacío deja elegir el contacto.
+};
+/* ============================================= */
+
+var $ = function (id) { return document.getElementById(id); };
+var fecha = new Date(CONFIG.fecha);
+
+document.title = CONFIG.nombre + " cumple " + CONFIG.edad;
+$("nombre").textContent = CONFIG.nombre;
+$("edadNum").textContent = CONFIG.edad;
+$("lugarTxt").textContent = CONFIG.lugar;
+$("dirTxt").textContent = CONFIG.direccion;
+var fechaLarga = new Intl.DateTimeFormat("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "America/Bogota" }).format(fecha);
+var horaTxt = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Bogota" }).format(fecha);
+$("fechaTxt").textContent = fechaLarga.charAt(0).toUpperCase() + fechaLarga.slice(1);
+$("horaTxt").textContent = horaTxt;
+$("mapa").href = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(CONFIG.direccion);
+
+/* Pastel con velas: decenas arriba (grandes) y unidades (chicas) */
+var NS = "http://www.w3.org/2000/svg";
+var decenas = Math.floor(CONFIG.edad / 10), unidades = CONFIG.edad % 10;
+var total = decenas + unidades;
+(function dibujarPastel() {
+  var s = $("pastel"), h = "";
+  h += '<ellipse cx="150" cy="214" rx="130" ry="10" fill="#2a5a54" opacity=".35"/>';
+  h += '<rect x="30" y="150" width="240" height="62" rx="10" fill="#c9783f"/>';
+  h += '<rect x="30" y="150" width="240" height="62" rx="10" fill="none" stroke="#a85f2e" stroke-width="2"/>';
+  h += '<rect x="50" y="108" width="200" height="48" rx="10" fill="#f2c9b3"/>';
+  h += '<path d="M50 126 q10 18 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 v-8 h-200z" fill="#fff8ea"/>';
+  h += '<path d="M30 160 q12 20 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 v-10 h-240z" fill="#fff8ea"/>';
+  var xs = [], i, ancho = 180, x0 = 60;
+  for (i = 0; i < total; i++) xs.push(x0 + (total === 1 ? ancho / 2 : i * ancho / (total - 1)));
+  for (i = 0; i < total; i++) {
+    var grande = i < decenas, x = xs[i], top = grande ? 62 : 80, color = grande ? "#d6452f" : "#e9a825";
+    h += '<g class="vela" tabindex="0" role="button" aria-label="Apagar vela ' + (i + 1) + '" aria-pressed="false" data-i="' + i + '">';
+    h += '<rect x="' + (x - 13) + '" y="' + (top - 22) + '" width="26" height="' + (112 - top + 22) + '" fill="transparent"/>';
+    h += '<rect class="cuerpo-vela" x="' + (x - 4.5) + '" y="' + top + '" width="9" height="' + (110 - top) + '" rx="2" fill="' + color + '"/>';
+    h += '<path d="M' + (x - 4.5) + ' ' + (top + 8) + ' l9 6 M' + (x - 4.5) + ' ' + (top + 18) + ' l9 6" stroke="#fff8ea" stroke-width="2" opacity=".8"/>';
+    h += '<g class="humo"><circle cx="' + x + '" cy="' + (top - 10) + '" r="3" fill="#9a8c85"/></g>';
+    h += '<path class="llama" d="M' + x + ' ' + (top - 18) + ' c6 6 6 12 0 14 c-6 -2 -6 -8 0 -14z" fill="#ffc22e"/>';
+    h += '<path class="llama" d="M' + x + ' ' + (top - 12) + ' c3 3 3 6 0 7 c-3 -1 -3 -4 0 -7z" fill="#fff1b8"/>';
+    h += '</g>';
+  }
+  s.innerHTML = h;
+})();
+
+var velas = Array.prototype.slice.call(document.querySelectorAll(".vela"));
+function apagadas() { return velas.filter(function (v) { return v.classList.contains("apagada"); }).length; }
+function pista() {
+  var n = apagadas();
+  if (n === 0) $("pista").innerHTML = "Toca las velas para apagarlas. Hay " + decenas + " grandes y " + unidades + " chiquitas, una por cada año si cuentas las grandes de a diez.";
+  else if (n < total) $("pista").innerHTML = "Van <strong>" + n + "</strong> apagadas. Faltan " + (total - n) + ".";
+  else $("pista").innerHTML = "<strong>¡Pide un deseo, " + CONFIG.nombre + "!</strong>";
+  $("encender").hidden = n === 0;
+}
+function alternar(v) {
+  var ya = v.classList.toggle("apagada");
+  v.setAttribute("aria-pressed", ya ? "true" : "false");
+  v.setAttribute("aria-label", (ya ? "Prender vela " : "Apagar vela ") + (+v.dataset.i + 1));
+  pista();
+  if (apagadas() === total) confeti();
+}
+velas.forEach(function (v) {
+  v.addEventListener("click", function () { alternar(v); });
+  v.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alternar(v); } });
+});
+$("encender").addEventListener("click", function () {
+  velas.forEach(function (v) { v.classList.remove("apagada"); v.setAttribute("aria-pressed", "false"); v.setAttribute("aria-label", "Apagar vela " + (+v.dataset.i + 1)); });
+  pista();
+});
+function confeti() {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var colores = ["#d6452f", "#e9a825", "#2f6f68", "#f2c9b3", "#25a35a"];
+  for (var i = 0; i < 60; i++) {
+    var c = document.createElement("i");
+    c.className = "confeti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colores[i % colores.length];
+    c.style.animationDuration = (2 + Math.random() * 2.2) + "s";
+    c.style.animationDelay = (Math.random() * .6) + "s";
+    document.body.appendChild(c);
+    setTimeout((function (el) { return function () { el.remove(); }; })(c), 5200);
+  }
+}
+pista();
+
+/* Dirección: copiar */
+$("copiarDir").addEventListener("click", function () {
+  var b = this, ok = function () { b.textContent = "Copiada"; setTimeout(function () { b.textContent = "Copiar dirección"; }, 1800); };
+  var respaldo = function () {
+    var r = document.createRange(); r.selectNodeContents($("dirTxt"));
+    var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    b.textContent = "Seleccionada";
+  };
+  try { navigator.clipboard.writeText(CONFIG.direccion).then(ok, respaldo); } catch (e) { respaldo(); }
+});
+
+/* Cuenta regresiva */
+function dibujarCuenta() {
+  var ms = fecha - new Date(), cont = $("relojes");
+  if (ms <= 0) { cont.innerHTML = '<div class="reloj" style="min-width:12rem"><b>¡Hoy se celebra!</b></div>'; return; }
+  var d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+  cont.innerHTML = [[d, "días"], [h, "horas"], [m, "min"]].map(function (p) { return '<div class="reloj"><b>' + p[0] + '</b><span>' + p[1] + '</span></div>'; }).join("");
+}
+dibujarCuenta(); setInterval(dibujarCuenta, 30000);
+
+/* Confirmación por WhatsApp */
+var cant = 1;
+function armarWa() {
+  var nombre = $("quien").value.trim() || "Alguien de la familia";
+  var txt = "¡Hola! Soy " + nombre + ". Confirmo asistencia al cumpleaños " + CONFIG.edad + " de " + CONFIG.nombre + " el " + $("fechaTxt").textContent.toLowerCase() + " a las " + horaTxt + ". Vamos " + cant + (cant === 1 ? " persona." : " personas.");
+  $("wa").href = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(txt);
+  $("cant").textContent = cant;
+}
+$("menos").addEventListener("click", function () { cant = Math.max(1, cant - 1); armarWa(); });
+$("mas").addEventListener("click", function () { cant = Math.min(12, cant + 1); armarWa(); });
+$("quien").addEventListener("input", armarWa);
+$("wa").addEventListener("click", function () {
+  $("estado").textContent = $("quien").value.trim() ? "Se abre WhatsApp con tu mensaje listo. Falta que lo envíes." : "Escribe tu nombre arriba para que sepan quién eres. Igual puedes enviarlo.";
+});
+armarWa();
+</script>
+</body>
+</html>
