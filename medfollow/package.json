@@ -1,0 +1,26 @@
+{
+  "name": "medfollow-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MedFollow AI - Plataforma inteligente de seguimiento clinico postconsulta",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @medfollow/clinical-engine && npm run build -w @medfollow/api && npm run build -w @medfollow/web",
+    "build:api": "npm run build -w @medfollow/clinical-engine && npm run build -w @medfollow/api",
+    "test": "npm run test -w @medfollow/clinical-engine && npm run test -w @medfollow/api",
+    "dev:api": "npm run dev -w @medfollow/api",
+    "dev:web": "npm run dev -w @medfollow/web",
+    "db:migrate": "npm run db:migrate -w @medfollow/api",
+    "db:seed": "npm run db:seed -w @medfollow/api",
+    "lint": "npm run lint --if-present --workspaces"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

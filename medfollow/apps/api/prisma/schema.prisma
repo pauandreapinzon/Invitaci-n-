@@ -1,0 +1,510 @@
+// Modelo de datos de MedFollow AI.
+// Principios: multi-tenant por hospital, PHI cifrada en reposo (AES-256-GCM),
+// trazabilidad completa (AuditLog) y versionado de protocolos y reglas.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DOCTOR
+  NURSE
+}
+
+enum RiskLevel {
+  GREEN
+  YELLOW
+  RED
+}
+
+enum EscalationChannel {
+  NONE
+  NURSE_QUEUE
+  DOCTOR_REVIEW
+  IMMEDIATE_CALL
+  EMERGENCY_REFERRAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  IN_PROGRESS
+  RESOLVED
+  DISMISSED
+}
+
+enum FollowUpStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CheckInStatus {
+  PENDING
+  SENT
+  ANSWERED
+  MISSED
+  SKIPPED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageAuthor {
+  PATIENT
+  AI
+  NURSE
+  DOCTOR
+  SYSTEM
+}
+
+enum ConsentStatus {
+  PENDING
+  GRANTED
+  WITHDRAWN
+}
+
+enum Channel {
+  WHATSAPP
+  WEB_SIMULATOR
+  SMS
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+  HANDED_OVER
+}
+
+enum SignalSource {
+  AI_EXTRACTION
+  HEURISTIC
+  NURSE
+  DOCTOR
+  PATIENT_FORM
+}
+
+enum AdherenceStatus {
+  TAKEN
+  PARTIAL
+  MISSED
+  UNKNOWN
+}
+
+enum ActorType {
+  USER
+  SYSTEM
+  PATIENT
+}
+
+model Hospital {
+  id            String   @id @default(uuid())
+  name          String
+  legalId       String?  @unique
+  city          String?
+  timezone      String   @default("America/Bogota")
+  /// Telefono de la central de enfermeria para escalamientos rojos.
+  escalationPhone String?
+  settings      Json     @default("{}")
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users         User[]
+  patients      Patient[]
+  plans         FollowUpPlan[]
+  alerts        Alert[]
+  conversations Conversation[]
+  protocols     Protocol[]
+  auditLogs     AuditLog[]
+}
+
+model User {
+  id            String   @id @default(uuid())
+  hospitalId    String
+  email         String   @unique
+  passwordHash  String
+  fullName      String
+  role          Role
+  /// Registro medico (ley 23 de 1981): obligatorio para rol medico.
+  licenseNumber String?
+  phone         String?
+  active        Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  hospital           Hospital       @relation(fields: [hospitalId], references: [id])
+  plansAsDoctor      FollowUpPlan[] @relation("PlanDoctor")
+  patientsCreated    Patient[]      @relation("PatientCreatedBy")
+  alertsAssigned     Alert[]        @relation("AlertAssignee")
+  alertsAcknowledged Alert[]        @relation("AlertAcknowledgedBy")
+  alertsResolved     Alert[]        @relation("AlertResolvedBy")
+  messagesSent       Message[]      @relation("MessageSender")
+  auditLogs          AuditLog[]
+
+  @@index([hospitalId, role])
+}
+
+model Patient {
+  id             String   @id @default(uuid())
+  hospitalId     String
+  /// Nombre completo (dato identificable: acceso auditado).
+  fullName       String
+  documentType   String   @default("CC")
+  /// Documento cifrado AES-256-GCM.
+  documentIdEnc  String
+  /// Telefono E.164 cifrado AES-256-GCM.
+  phoneEnc       String
+  /// HMAC-SHA256 del telefono: permite buscar sin almacenar el dato en claro.
+  phoneHash      String
+  birthDate      DateTime?
+  sex            String?
+  pregnant       Boolean  @default(false)
+  comorbidities  String[] @default([])
+  language       String   @default("es")
+  currentRiskLevel RiskLevel @default(GREEN)
+  currentRiskScore Int      @default(0)
+  lastContactAt  DateTime?
+  active         Boolean  @default(true)
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  hospital      Hospital           @relation(fields: [hospitalId], references: [id])
+  createdBy     User?              @relation("PatientCreatedBy", fields: [createdById], references: [id])
+  consents      Consent[]
+  plans         FollowUpPlan[]
+  conversations Conversation[]
+  symptoms      SymptomObservation[]
+  vitals        VitalReading[]
+  riskScores    RiskScore[]
+  alerts        Alert[]
+  checkIns      FollowUpCheckIn[]
+  adherence     AdherenceEvent[]
+
+  @@unique([hospitalId, phoneHash])
+  @@index([hospitalId, currentRiskLevel])
+  @@index([phoneHash])
+}
+
+/// Consentimiento informado digital (Ley 1581 de 2012, Decreto 1377 de 2013).
+model Consent {
+  id           String        @id @default(uuid())
+  patientId    String
+  status       ConsentStatus @default(PENDING)
+  channel      Channel       @default(WHATSAPP)
+  textVersion  String
+  /// Texto exacto aceptado por el paciente (prueba de consentimiento).
+  textSnapshot String
+  grantedAt    DateTime?
+  withdrawnAt  DateTime?
+  /// Mensaje del paciente que constituye la evidencia de aceptacion.
+  evidenceMessageId String?
+  ipAddress    String?
+  createdAt    DateTime      @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId, status])
+}
+
+model Protocol {
+  id          String   @id @default(uuid())
+  code        String
+  version     String
+  name        String
+  specialty   String   @default("Medicina general")
+  /// Definicion completa (preguntas y reglas) serializada en JSON y auditable.
+  definition  Json
+  active      Boolean  @default(true)
+  /// Hospital propietario; null = protocolo base de la plataforma.
+  hospitalId  String?
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hospital Hospital? @relation(fields: [hospitalId], references: [id])
+
+  @@unique([code, version, hospitalId])
+  @@index([active])
+}
+
+model FollowUpPlan {
+  id              String         @id @default(uuid())
+  patientId       String
+  hospitalId      String
+  doctorId        String?
+  consultationAt  DateTime       @default(now())
+  diagnosisText   String
+  diagnosisCode   String?
+  protocolCode    String
+  protocolVersion String
+  /// Explicacion en lenguaje sencillo entregada al paciente (caso de uso 1).
+  plainLanguageExplanation String?
+  instructions    String?
+  checkInDays     Int[]          @default([])
+  startDate       DateTime       @default(now())
+  endDate         DateTime?
+  status          FollowUpStatus @default(SCHEDULED)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  patient     Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  hospital    Hospital           @relation(fields: [hospitalId], references: [id])
+  doctor      User?              @relation("PlanDoctor", fields: [doctorId], references: [id])
+  medications Medication[]
+  checkIns    FollowUpCheckIn[]
+  adherence   AdherenceEvent[]
+  riskScores  RiskScore[]
+  alerts      Alert[]
+
+  @@index([hospitalId, status])
+  @@index([patientId, status])
+}
+
+model Medication {
+  id             String   @id @default(uuid())
+  planId         String
+  name           String
+  dose           String
+  frequencyHours Int
+  durationDays   Int
+  instructions   String?
+  createdAt      DateTime @default(now())
+
+  plan      FollowUpPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  adherence AdherenceEvent[]
+
+  @@index([planId])
+}
+
+model FollowUpCheckIn {
+  id           String        @id @default(uuid())
+  planId       String
+  patientId    String
+  dayOffset    Int
+  scheduledAt  DateTime
+  sentAt       DateTime?
+  answeredAt   DateTime?
+  status       CheckInStatus @default(PENDING)
+  attempts     Int           @default(0)
+  conversationId String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  plan         FollowUpPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id])
+  symptoms     SymptomObservation[]
+  riskScores   RiskScore[]
+
+  @@index([status, scheduledAt])
+  @@index([planId, dayOffset])
+}
+
+model Conversation {
+  id            String             @id @default(uuid())
+  patientId     String
+  hospitalId    String
+  channel       Channel            @default(WHATSAPP)
+  status        ConversationStatus @default(OPEN)
+  /// Identificador del hilo en el proveedor de WhatsApp.
+  externalRef   String?
+  startedAt     DateTime           @default(now())
+  lastMessageAt DateTime           @default(now())
+  /// Enfermera o medico que tomo el control de la conversacion.
+  handedOverToId String?
+
+  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  hospital  Hospital          @relation(fields: [hospitalId], references: [id])
+  messages  Message[]
+  checkIns  FollowUpCheckIn[]
+
+  @@index([hospitalId, status])
+  @@index([patientId, lastMessageAt])
+}
+
+model Message {
+  id             String           @id @default(uuid())
+  conversationId String
+  direction      MessageDirection
+  author         MessageAuthor
+  /// Contenido cifrado AES-256-GCM (dato sensible de salud).
+  bodyEnc        String
+  senderUserId   String?
+  providerMessageId String?
+  /// Modelo de IA que genero la respuesta, para trazabilidad clinica.
+  aiModel        String?
+  aiLatencyMs    Int?
+  /// true si la respuesta fue generada por plantilla determinista y no por el LLM.
+  deterministic  Boolean          @default(false)
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  metadata       Json             @default("{}")
+  createdAt      DateTime         @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?        @relation("MessageSender", fields: [senderUserId], references: [id])
+  symptoms     SymptomObservation[]
+  vitals       VitalReading[]
+
+  @@index([conversationId, createdAt])
+}
+
+model SymptomObservation {
+  id         String       @id @default(uuid())
+  patientId  String
+  checkInId  String?
+  messageId  String?
+  code       String
+  label      String
+  present    Boolean      @default(true)
+  severity   String?
+  trend      String?
+  onsetDays  Int?
+  quote      String?
+  source     SignalSource @default(AI_EXTRACTION)
+  confidence Float?
+  reportedAt DateTime     @default(now())
+
+  patient Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  checkIn FollowUpCheckIn? @relation(fields: [checkInId], references: [id])
+  message Message?         @relation(fields: [messageId], references: [id])
+
+  @@index([patientId, reportedAt])
+  @@index([code])
+}
+
+model VitalReading {
+  id         String       @id @default(uuid())
+  patientId  String
+  messageId  String?
+  metric     String
+  value      Float
+  unit       String
+  source     SignalSource @default(AI_EXTRACTION)
+  reportedAt DateTime     @default(now())
+
+  patient Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  message Message? @relation(fields: [messageId], references: [id])
+
+  @@index([patientId, metric, reportedAt])
+}
+
+model AdherenceEvent {
+  id           String          @id @default(uuid())
+  patientId    String
+  planId       String
+  medicationId String?
+  status       AdherenceStatus @default(UNKNOWN)
+  missedDoses  Int             @default(0)
+  totalDoses   Int             @default(0)
+  note         String?
+  reportedAt   DateTime        @default(now())
+
+  patient    Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  plan       FollowUpPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  medication Medication?  @relation(fields: [medicationId], references: [id])
+
+  @@index([patientId, reportedAt])
+}
+
+model RiskScore {
+  id              String    @id @default(uuid())
+  patientId       String
+  planId          String?
+  checkInId       String?
+  level           RiskLevel
+  score           Int
+  engineVersion   String
+  protocolCode    String?
+  protocolVersion String?
+  escalation      EscalationChannel @default(NONE)
+  /// Reglas disparadas con su evidencia (auditoria del motor determinista).
+  triggeredRules  Json      @default("[]")
+  /// Identificadores de todas las reglas evaluadas en esta corrida.
+  evaluatedRuleIds String[] @default([])
+  missingData     String[]  @default([])
+  inputSnapshot   Json      @default("{}")
+  evaluatedAt     DateTime  @default(now())
+
+  patient Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  plan    FollowUpPlan?    @relation(fields: [planId], references: [id])
+  checkIn FollowUpCheckIn? @relation(fields: [checkInId], references: [id])
+  alerts  Alert[]
+
+  @@index([patientId, evaluatedAt])
+  @@index([level, evaluatedAt])
+}
+
+model Alert {
+  id             String      @id @default(uuid())
+  patientId      String
+  hospitalId     String
+  planId         String?
+  riskScoreId    String?
+  level          RiskLevel
+  /// Prioridad de cola: 1 = maxima.
+  priority       Int         @default(3)
+  status         AlertStatus @default(OPEN)
+  title          String
+  summary        String
+  triggeredRuleIds String[]  @default([])
+  escalation     EscalationChannel @default(NURSE_QUEUE)
+  assignedToId   String?
+  acknowledgedAt DateTime?
+  acknowledgedById String?
+  resolvedAt     DateTime?
+  resolvedById   String?
+  resolutionNote String?
+  /// Minutos entre la creacion y el primer contacto humano (indicador de calidad).
+  timeToAckMinutes Int?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  patient        Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  hospital       Hospital      @relation(fields: [hospitalId], references: [id])
+  plan           FollowUpPlan? @relation(fields: [planId], references: [id])
+  riskScore      RiskScore?    @relation(fields: [riskScoreId], references: [id])
+  assignedTo     User?         @relation("AlertAssignee", fields: [assignedToId], references: [id])
+  acknowledgedBy User?         @relation("AlertAcknowledgedBy", fields: [acknowledgedById], references: [id])
+  resolvedBy     User?         @relation("AlertResolvedBy", fields: [resolvedById], references: [id])
+
+  @@index([hospitalId, status, priority])
+  @@index([patientId, createdAt])
+}
+
+/// Bitacora inmutable de accesos y acciones (Resolucion 1995 de 1999, trazabilidad).
+model AuditLog {
+  id         String    @id @default(uuid())
+  hospitalId String?
+  actorId    String?
+  actorType  ActorType @default(USER)
+  actorRole  String?
+  action     String
+  resource   String
+  resourceId String?
+  patientId  String?
+  ipAddress  String?
+  userAgent  String?
+  metadata   Json      @default("{}")
+  createdAt  DateTime  @default(now())
+
+  hospital Hospital? @relation(fields: [hospitalId], references: [id])
+  actor    User?     @relation(fields: [actorId], references: [id])
+
+  @@index([hospitalId, createdAt])
+  @@index([patientId, createdAt])
+  @@index([action, createdAt])
+}

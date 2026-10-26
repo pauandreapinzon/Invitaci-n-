@@ -1,0 +1,72 @@
+# Servicios de desarrollo para MedFollow AI.
+#   docker compose up -d                  -> solo PostgreSQL y Redis
+#   docker compose --profile app up --build  -> ademas API y dashboard
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: medfollow
+      POSTGRES_PASSWORD: medfollow
+      POSTGRES_DB: medfollow
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U medfollow -d medfollow']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'no', '--save', '']
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://medfollow:medfollow@postgres:5432/medfollow?schema=public
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      PORT: '3000'
+      CORS_ORIGINS: http://localhost:3001
+      # En produccion estas claves vienen de un gestor de secretos (Key Vault), no del compose.
+      JWT_SECRET: ${JWT_SECRET:?define JWT_SECRET}
+      PHI_ENCRYPTION_KEY: ${PHI_ENCRYPTION_KEY:?genera con openssl rand -base64 32}
+      PHI_HASH_KEY: ${PHI_HASH_KEY:?genera con openssl rand -base64 32}
+      AI_PROVIDER: ${AI_PROVIDER:-deterministic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
+      WHATSAPP_PROVIDER: ${WHATSAPP_PROVIDER:-console}
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3000/api
+    ports:
+      - '3001:3001'
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
